@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: white;
+  overflow-x: hidden;
+}
+
+.font-script {
+  font-family: 'Dancing Script', cursive;
+}
+
+/* Floating particles background */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+  50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(251, 113, 133, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(251, 113, 133, 0.6); }
+}
+
+.sparkle-dot {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Countdown number styling */
+.countdown-number {
+  background: linear-gradient(135deg, #fda4af, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gift card styling */
+.gift-card-bg {
+  background: linear-gradient(135deg, #fda4af22, #fbbf2422);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(253, 164, 175, 0.3);
+}
+
+/* Voucher button hover effect */
+.voucher-btn {
+  transition: all 0.3s ease;
+}
+.voucher-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(251, 113, 133, 0.3);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(253, 164, 175, 0.3);
+  border-radius: 3px;
+}
