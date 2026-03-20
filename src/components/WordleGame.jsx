@@ -176,8 +176,8 @@ export default function WordleGame({ open, onClose }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[250] flex flex-col overscroll-none"
-      style={{ touchAction: 'none' }}
+      className="fixed inset-0 z-[250] overscroll-none"
+      style={{ touchAction: 'none', height: '100dvh' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -186,8 +186,8 @@ export default function WordleGame({ open, onClose }) {
       <div className="absolute inset-0 bg-[#0f172a]/[0.97] backdrop-blur-xl" />
 
       <div className="relative z-10 flex flex-col h-full max-w-lg mx-auto w-full px-3 sm:px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between pt-4 pb-2">
+        {/* Header — flex-shrink-0 */}
+        <div className="flex-shrink-0 flex items-center justify-between pt-4 pb-2">
           <button
             onClick={() => { resetGame(); onClose() }}
             className="text-slate-500 text-sm hover:text-slate-300 transition-colors px-2 py-1"
@@ -210,7 +210,7 @@ export default function WordleGame({ open, onClose }) {
             /* Final reveal */
             <motion.div
               key="reveal"
-              className="flex-1 flex flex-col items-center justify-center gap-6 pb-20"
+              className="flex-1 flex flex-col items-center justify-center gap-6 pb-20 min-h-0"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -239,76 +239,86 @@ export default function WordleGame({ open, onClose }) {
               </motion.p>
             </motion.div>
           ) : (
-            /* Game board */
+            /* Game board — flex column with sticky keyboard */
             <motion.div
               key={`level-${level}`}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col min-h-0"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Hint */}
-              <AnimatePresence>
-                {showHint && (
-                  <motion.p
-                    className="text-amber-400/70 text-xs text-center py-2"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                  >
-                    Hint: {currentLevel.hint}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-
-              {/* Grid */}
-              <div className="flex-1 flex flex-col items-center justify-center gap-1.5 py-2 min-h-0 overflow-y-auto">
-                {/* Submitted guesses */}
-                {guesses.map(({ guess, result }, gi) => (
-                  <div key={gi} className="flex gap-1.5">
-                    {guess.split('').map((letter, li) => (
-                      <motion.div
-                        key={li}
-                        className={`w-9 h-10 sm:w-11 sm:h-12 rounded-lg flex items-center justify-center text-white font-bold text-base sm:text-lg border ${TILE_COLORS[result[li]]}`}
-                        initial={{ rotateX: 0 }}
-                        animate={{ rotateX: [0, 90, 0] }}
-                        transition={{ duration: 0.4, delay: li * 0.1 }}
-                      >
-                        {letter}
-                      </motion.div>
-                    ))}
-                  </div>
-                ))}
-
-                {/* Current guess row */}
-                {!guesses.some(g => g.guess === currentLevel.word) && (
-                  <motion.div
-                    className="flex gap-1.5"
-                    animate={shaking ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : {}}
-                    transition={{ duration: 0.35 }}
-                  >
-                    {Array.from({ length: wordLength }, (_, i) => {
-                      const letter = currentGuess[i]
-                      return (
-                        <motion.div
-                          key={i}
-                          className={`w-9 h-10 sm:w-11 sm:h-12 rounded-lg flex items-center justify-center font-bold text-base sm:text-lg border transition-colors ${
-                            letter ? TILE_COLORS.active : TILE_COLORS.empty
-                          }`}
-                          animate={letter ? { scale: [1, 1.1, 1] } : {}}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <span className="text-white">{letter || ''}</span>
-                        </motion.div>
-                      )
-                    })}
-                  </motion.div>
-                )}
+              {/* Hint — flex-shrink-0 */}
+              <div className="flex-shrink-0">
+                <AnimatePresence>
+                  {showHint && (
+                    <motion.p
+                      className="text-amber-400/70 text-xs text-center py-2"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      Hint: {currentLevel.hint}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
 
-              {/* Keyboard */}
-              <div className="pb-4 pt-2 space-y-1.5">
+              {/* Scrollable guesses area — flex-grow with fade mask */}
+              <div className="relative flex-1 min-h-0">
+                <div
+                  className="absolute inset-0 overflow-y-auto overscroll-contain flex flex-col items-center justify-end gap-1.5 py-2"
+                  style={{ touchAction: 'pan-y' }}
+                >
+                  {/* Submitted guesses */}
+                  {guesses.map(({ guess, result }, gi) => (
+                    <div key={gi} className="flex gap-1.5 flex-shrink-0">
+                      {guess.split('').map((letter, li) => (
+                        <motion.div
+                          key={li}
+                          className={`w-9 h-10 sm:w-11 sm:h-12 rounded-lg flex items-center justify-center text-white font-bold text-base sm:text-lg border ${TILE_COLORS[result[li]]}`}
+                          initial={{ rotateX: 0 }}
+                          animate={{ rotateX: [0, 90, 0] }}
+                          transition={{ duration: 0.4, delay: li * 0.1 }}
+                        >
+                          {letter}
+                        </motion.div>
+                      ))}
+                    </div>
+                  ))}
+
+                  {/* Current guess row */}
+                  {!guesses.some(g => g.guess === currentLevel.word) && (
+                    <motion.div
+                      className="flex gap-1.5 flex-shrink-0"
+                      animate={shaking ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : {}}
+                      transition={{ duration: 0.35 }}
+                    >
+                      {Array.from({ length: wordLength }, (_, i) => {
+                        const letter = currentGuess[i]
+                        return (
+                          <motion.div
+                            key={i}
+                            className={`w-9 h-10 sm:w-11 sm:h-12 rounded-lg flex items-center justify-center font-bold text-base sm:text-lg border transition-colors ${
+                              letter ? TILE_COLORS.active : TILE_COLORS.empty
+                            }`}
+                            animate={letter ? { scale: [1, 1.1, 1] } : {}}
+                            transition={{ duration: 0.15 }}
+                          >
+                            <span className="text-white">{letter || ''}</span>
+                          </motion.div>
+                        )
+                      })}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Fade-out mask at bottom of scroll area */}
+                <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#0f172a] to-transparent pointer-events-none z-10" />
+              </div>
+
+              {/* Keyboard — flex-shrink-0, always visible */}
+              <div className="flex-shrink-0 pb-4 pt-2 space-y-1.5">
                 {KEYBOARD_ROWS.map((row, ri) => (
                   <div key={ri} className="flex justify-center gap-1 sm:gap-1.5">
                     {row.map(key => (
