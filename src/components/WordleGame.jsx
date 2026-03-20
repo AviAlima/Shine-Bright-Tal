@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import DiamondEarringsSVG from './DiamondEarringsSVG'
 
 const LEVELS = [
-  { word: 'EARRINGS', hint: 'Something you wear on your ears...' },
-  { word: 'STUDDED', hint: 'A type that sits right on the lobe...' },
+  { word: 'STUDS', hint: 'A classic earring style...' },
+  { word: 'INSET', hint: 'How a gem sits in its setting...' },
   { word: 'DIAMOND', hint: 'The most brilliant stone of all...' },
 ]
 
@@ -20,14 +20,12 @@ function evaluateGuess(guess, answer) {
   const guessChars = guess.split('')
   const used = Array(answer.length).fill(false)
 
-  // First pass: correct positions
   for (let i = 0; i < answer.length; i++) {
     if (guessChars[i] === answerChars[i]) {
       result[i] = 'correct'
       used[i] = true
     }
   }
-  // Second pass: present but wrong position
   for (let i = 0; i < answer.length; i++) {
     if (result[i] === 'correct') continue
     for (let j = 0; j < answer.length; j++) {
@@ -56,6 +54,12 @@ const KEY_COLORS = {
   unused: 'bg-[#1e293b]/70 text-white border border-white/[0.12] backdrop-blur-sm',
 }
 
+// Tile size classes based on word length
+function tileClasses(wordLength) {
+  if (wordLength >= 7) return 'w-[38px] h-[42px] sm:w-10 sm:h-11 text-sm sm:text-base'
+  return 'w-9 h-10 sm:w-11 sm:h-12 text-base sm:text-lg'
+}
+
 function KeyboardKey({ label, status, onPress }) {
   const isWide = label === 'ENTER' || label === 'DEL'
   return (
@@ -64,11 +68,41 @@ function KeyboardKey({ label, status, onPress }) {
         isWide ? 'px-3 sm:px-4 text-[10px] sm:text-xs min-w-[52px] sm:min-w-[60px]' : 'text-sm sm:text-base min-w-[28px] sm:min-w-[34px]'
       } h-[44px] sm:h-12 active:brightness-125 active:scale-95 transition-all duration-75`}
       onClick={() => onPress(label)}
-      whileTap={{ scale: 0.92, brightness: 1.3 }}
+      whileTap={{ scale: 0.92 }}
       type="button"
     >
       {label}
     </motion.button>
+  )
+}
+
+function LevelClearOverlay() {
+  return (
+    <motion.div
+      className="absolute inset-0 z-20 flex flex-col items-center justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.div
+        className="text-center"
+        initial={{ scale: 0.6, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 1.1, opacity: 0 }}
+        transition={{ type: 'spring', damping: 12 }}
+      >
+        <motion.div
+          className="text-5xl mb-3"
+          animate={{ rotate: [0, -10, 10, 0] }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          🎉
+        </motion.div>
+        <p className="text-white text-xl font-semibold">Level Clear!</p>
+        <p className="text-slate-400 text-sm mt-1">Next word loading...</p>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -79,9 +113,12 @@ export default function WordleGame({ open, onClose }) {
   const [shaking, setShaking] = useState(false)
   const [completed, setCompleted] = useState(false)
   const [showHint, setShowHint] = useState(false)
+  const [levelCleared, setLevelCleared] = useState(false)
 
   const currentLevel = LEVELS[level]
   const wordLength = currentLevel.word.length
+  const tileCls = tileClasses(wordLength)
+  const levelWon = guesses.some(g => g.guess === currentLevel.word)
 
   // Build letter status map for keyboard coloring
   const letterStatuses = useMemo(() => {
@@ -102,7 +139,7 @@ export default function WordleGame({ open, onClose }) {
   }, [guesses])
 
   const handleKey = useCallback((key) => {
-    if (completed) return
+    if (completed || levelCleared) return
 
     if (key === 'DEL') {
       setCurrentGuess(prev => prev.slice(0, -1))
@@ -123,27 +160,28 @@ export default function WordleGame({ open, onClose }) {
       setShowHint(false)
 
       if (currentGuess === currentLevel.word) {
-        // Level won
-        setTimeout(() => {
-          if (level < LEVELS.length - 1) {
+        if (level < LEVELS.length - 1) {
+          // Show "Level Clear!" then advance
+          setTimeout(() => setLevelCleared(true), 800)
+          setTimeout(() => {
+            setLevelCleared(false)
             setLevel(prev => prev + 1)
             setGuesses([])
             setShowHint(false)
-          } else {
-            setCompleted(true)
-          }
-        }, 1200)
+          }, 2200)
+        } else {
+          setTimeout(() => setCompleted(true), 1200)
+        }
       } else if (newGuesses.length >= 5 && !showHint) {
         setShowHint(true)
       }
       return
     }
 
-    // Letter key
     if (currentGuess.length < wordLength) {
       setCurrentGuess(prev => prev + key)
     }
-  }, [currentGuess, currentLevel, wordLength, guesses, level, completed, showHint])
+  }, [currentGuess, currentLevel, wordLength, guesses, level, completed, showHint, levelCleared])
 
   const resetGame = useCallback(() => {
     setLevel(0)
@@ -151,6 +189,7 @@ export default function WordleGame({ open, onClose }) {
     setCurrentGuess('')
     setCompleted(false)
     setShowHint(false)
+    setLevelCleared(false)
   }, [])
 
   // Body scroll lock
@@ -186,7 +225,7 @@ export default function WordleGame({ open, onClose }) {
       <div className="absolute inset-0 bg-[#0f172a]/[0.97] backdrop-blur-xl" />
 
       <div className="relative z-10 flex flex-col h-full max-w-lg mx-auto w-full px-3 sm:px-4">
-        {/* Header — flex-shrink-0 */}
+        {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between pt-4 pb-2">
           <button
             onClick={() => { resetGame(); onClose() }}
@@ -239,16 +278,21 @@ export default function WordleGame({ open, onClose }) {
               </motion.p>
             </motion.div>
           ) : (
-            /* Game board — flex column with sticky keyboard */
+            /* Game board */
             <motion.div
               key={`level-${level}`}
-              className="flex-1 flex flex-col min-h-0"
+              className="flex-1 flex flex-col min-h-0 relative"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Hint — flex-shrink-0 */}
+              {/* Level Clear overlay */}
+              <AnimatePresence>
+                {levelCleared && <LevelClearOverlay />}
+              </AnimatePresence>
+
+              {/* Hint */}
               <div className="flex-shrink-0">
                 <AnimatePresence>
                   {showHint && (
@@ -264,19 +308,18 @@ export default function WordleGame({ open, onClose }) {
                 </AnimatePresence>
               </div>
 
-              {/* Scrollable guesses area — flex-grow with fade mask */}
+              {/* Scrollable guesses area */}
               <div className="relative flex-1 min-h-0">
                 <div
                   className="absolute inset-0 overflow-y-auto overscroll-contain flex flex-col items-center justify-end gap-1.5 py-2"
                   style={{ touchAction: 'pan-y' }}
                 >
-                  {/* Submitted guesses */}
                   {guesses.map(({ guess, result }, gi) => (
-                    <div key={gi} className="flex gap-1.5 flex-shrink-0">
+                    <div key={gi} className="flex gap-1 sm:gap-1.5 flex-shrink-0">
                       {guess.split('').map((letter, li) => (
                         <motion.div
                           key={li}
-                          className={`w-9 h-10 sm:w-11 sm:h-12 rounded-lg flex items-center justify-center text-white font-bold text-base sm:text-lg border ${TILE_COLORS[result[li]]}`}
+                          className={`${tileCls} rounded-lg flex items-center justify-center text-white font-bold border ${TILE_COLORS[result[li]]}`}
                           initial={{ rotateX: 0 }}
                           animate={{ rotateX: [0, 90, 0] }}
                           transition={{ duration: 0.4, delay: li * 0.1 }}
@@ -288,9 +331,9 @@ export default function WordleGame({ open, onClose }) {
                   ))}
 
                   {/* Current guess row */}
-                  {!guesses.some(g => g.guess === currentLevel.word) && (
+                  {!levelWon && (
                     <motion.div
-                      className="flex gap-1.5 flex-shrink-0"
+                      className="flex gap-1 sm:gap-1.5 flex-shrink-0"
                       animate={shaking ? { x: [0, -8, 8, -6, 6, -3, 3, 0] } : {}}
                       transition={{ duration: 0.35 }}
                     >
@@ -299,7 +342,7 @@ export default function WordleGame({ open, onClose }) {
                         return (
                           <motion.div
                             key={i}
-                            className={`w-9 h-10 sm:w-11 sm:h-12 rounded-lg flex items-center justify-center font-bold text-base sm:text-lg border transition-colors ${
+                            className={`${tileCls} rounded-lg flex items-center justify-center font-bold border transition-colors ${
                               letter ? TILE_COLORS.active : TILE_COLORS.empty
                             }`}
                             animate={letter ? { scale: [1, 1.1, 1] } : {}}
@@ -313,11 +356,10 @@ export default function WordleGame({ open, onClose }) {
                   )}
                 </div>
 
-                {/* Fade-out mask at bottom of scroll area */}
                 <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#0f172a] to-transparent pointer-events-none z-10" />
               </div>
 
-              {/* Keyboard — flex-shrink-0, always visible */}
+              {/* Keyboard */}
               <div className="flex-shrink-0 pb-4 pt-2 space-y-1.5">
                 {KEYBOARD_ROWS.map((row, ri) => (
                   <div key={ri} className="flex justify-center gap-1 sm:gap-1.5">
