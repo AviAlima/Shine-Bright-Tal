@@ -1,19 +1,53 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import WordleGame from './WordleGame'
 
 const vouchers = [
-  { id: 'hand', emoji: '🤝', title: 'Hand Holding', description: 'Valid for 120 years, include upgrade to petting.', color: 'from-rose-400 to-pink-500', hex: ['#fb7185', '#ec4899'] },
-  { id: 'double-hand', emoji: '🤝🤝', title: 'Double Hand Holding', description: 'Full body powerful hug. Include protection from wind and cold.', color: 'from-pink-400 to-rose-500', hex: ['#f472b6', '#f43f5e'] },
-  { id: 'hug', emoji: '🤗', title: 'Hug', description: 'Valid forever. Redeemable with a smile.', color: 'from-amber-400 to-orange-500', hex: ['#fbbf24', '#f97316'] },
-  { id: 'kiss', emoji: '💋', title: 'Kiss', description: 'Warning: Addictive.', color: 'from-red-400 to-rose-600', hex: ['#f87171', '#e11d48'] },
-  { id: 'cuddle', emoji: '☁️', title: 'Cuddling', description: 'Usage: requires blanket and minimum 15 minutes.', color: 'from-purple-400 to-pink-500', hex: ['#c084fc', '#ec4899'] },
+  { id: 'hand', emoji: '🤝', title: 'Hand Holding', description: 'Valid for 120 years, include upgrade to petting.', hex: ['#fb7185', '#ec4899'] },
+  { id: 'double-hand', emoji: '🤝🤝', title: 'Double Hand Holding', description: 'Full body powerful hug. Include protection from wind and cold.', hex: ['#f472b6', '#f43f5e'] },
+  { id: 'hug', emoji: '🤗', title: 'Hug', description: 'Valid forever. Redeemable with a smile.', hex: ['#fbbf24', '#f97316'] },
+  { id: 'kiss', emoji: '💋', title: 'Kiss', description: 'Warning: Addictive.', hex: ['#f87171', '#e11d48'] },
+  { id: 'cuddle', emoji: '☁️', title: 'Cuddling', description: 'Usage: requires blanket and minimum 15 minutes.', hex: ['#c084fc', '#ec4899'] },
 ]
+
+// Stable random-ish pulse durations seeded by index
+const PULSE_DURATIONS = [2.4, 3.1, 2.7, 3.5, 2.9]
+
+function VoucherButton({ voucher, index, onSelect }) {
+  const pulseDuration = PULSE_DURATIONS[index % PULSE_DURATIONS.length]
+
+  return (
+    <motion.button
+      className="w-full h-28 rounded-2xl backdrop-blur-sm flex flex-col items-center justify-center gap-2 overflow-hidden relative"
+      style={{
+        background: `linear-gradient(135deg, ${voucher.hex[0]}18, ${voucher.hex[1]}0a)`,
+        border: `1px solid ${voucher.hex[0]}25`,
+      }}
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: 1,
+        boxShadow: [
+          `0 0 0px ${voucher.hex[0]}00`,
+          `0 0 18px ${voucher.hex[0]}20`,
+          `0 0 0px ${voucher.hex[0]}00`,
+        ],
+      }}
+      transition={{
+        opacity: { delay: 2.3 + index * 0.1, duration: 0.4 },
+        boxShadow: { duration: pulseDuration, repeat: Infinity, ease: 'easeInOut', delay: index * 0.4 },
+      }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => onSelect(voucher)}
+    >
+      <span className="text-3xl sm:text-4xl leading-none">{voucher.emoji}</span>
+      <span className="text-rose-100 text-xs sm:text-sm font-medium leading-tight text-center px-2 truncate w-full">{voucher.title}</span>
+    </motion.button>
+  )
+}
 
 function VoucherCard({ voucher, onClose }) {
   const [redeemed, setRedeemed] = useState(false)
   const [showPulse, setShowPulse] = useState(false)
-  const [exiting, setExiting] = useState(false)
 
   const handleRedeem = () => {
     if (redeemed) return
@@ -25,12 +59,10 @@ function VoucherCard({ voucher, onClose }) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ pointerEvents: exiting ? 'none' : 'auto' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      exit={{ opacity: 0, pointerEvents: 'none' }}
       transition={{ duration: 0.15 }}
-      onAnimationStart={(def) => { if (def === 'exit') setExiting(true) }}
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -39,27 +71,24 @@ function VoucherCard({ voucher, onClose }) {
         className="relative max-w-sm w-full z-10"
         initial={{ scale: 0.5, rotate: -8, opacity: 0 }}
         animate={{ scale: 1, rotate: 0, opacity: 1 }}
-        exit={{ scale: 0.8, opacity: 0 }}
-        transition={{ type: 'spring', damping: 18, duration: 0.15 }}
+        exit={{ scale: 0.85, opacity: 0 }}
+        transition={{ type: 'spring', damping: 20 }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Coupon card with tear-off styling */}
         <div className="relative rounded-3xl overflow-hidden">
-          {/* Top gradient bar — voucher-specific color */}
+          {/* Top gradient bar */}
           <div
             className="h-2"
             style={{ background: `linear-gradient(to right, ${voucher.hex[0]}, ${voucher.hex[1]})` }}
           />
 
-          {/* Main card body */}
           <div className="bg-gradient-to-b from-[#1e1e3a] to-[#16162e] px-8 py-8 sm:px-10 sm:py-10 relative">
-            {/* Dashed tear-off line on the left */}
+            {/* Dashed tear-off */}
             <div className="absolute left-5 top-0 bottom-0 border-l-2 border-dashed border-white/[0.08]" />
-            {/* Semi-circle cutouts */}
             <div className="absolute left-[14px] -top-3 w-6 h-6 rounded-full bg-black/60" />
             <div className="absolute left-[14px] -bottom-3 w-6 h-6 rounded-full bg-black/60" />
 
-            {/* Redemption pulse overlay */}
+            {/* Redemption pulse */}
             <AnimatePresence>
               {showPulse && (
                 <motion.div
@@ -74,12 +103,10 @@ function VoucherCard({ voucher, onClose }) {
             </AnimatePresence>
 
             <div className="text-center pl-4">
-              {/* Label */}
               <p className="text-white/30 text-[10px] uppercase tracking-[0.35em] mb-4">
                 Affection Voucher
               </p>
 
-              {/* Emoji */}
               <motion.div
                 className="text-6xl sm:text-7xl mb-5"
                 animate={redeemed ? { rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] } : { scale: [1, 1.1, 1] }}
@@ -88,7 +115,6 @@ function VoucherCard({ voucher, onClose }) {
                 {voucher.emoji}
               </motion.div>
 
-              {/* Title */}
               <h3
                 className="text-3xl sm:text-4xl text-rose-50 mb-1"
                 style={{ fontFamily: "'Dancing Script', cursive" }}
@@ -96,17 +122,14 @@ function VoucherCard({ voucher, onClose }) {
                 {voucher.title}
               </h3>
 
-              {/* Presented to */}
               <p className="text-white/25 text-[11px] tracking-wider mb-5" style={{ fontFamily: "Georgia, serif" }}>
                 Presented to: <span className="text-white/40">Tal</span>
               </p>
 
-              {/* Description */}
               <p className="text-rose-200/60 text-sm leading-relaxed mb-6 max-w-[260px] mx-auto">
                 {voucher.description}
               </p>
 
-              {/* Redeem button */}
               <motion.button
                 className={`px-8 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                   redeemed
@@ -132,7 +155,6 @@ function VoucherCard({ voucher, onClose }) {
                 ) : 'Redeem Voucher'}
               </motion.button>
 
-              {/* Divider */}
               <div className="border-t border-white/[0.06] mt-6 pt-4">
                 <p className="text-white/20 text-[10px] tracking-wider" style={{ fontFamily: "Georgia, serif" }}>
                   Valid forever &bull; For Tal only
@@ -145,7 +167,6 @@ function VoucherCard({ voucher, onClose }) {
           </div>
         </div>
 
-        {/* Close button below card */}
         <motion.button
           className="mt-4 w-full text-center text-white/30 text-xs hover:text-white/50 transition-colors py-3"
           whileTap={{ scale: 0.95 }}
@@ -162,6 +183,10 @@ export default function GiftZone() {
   const [selectedVoucher, setSelectedVoucher] = useState(null)
   const [wordleOpen, setWordleOpen] = useState(false)
 
+  const handleClose = useCallback(() => {
+    setSelectedVoucher(null)
+  }, [])
+
   return (
     <motion.section
       className="px-4 sm:px-8 py-12"
@@ -173,7 +198,7 @@ export default function GiftZone() {
         Gift Zone
       </h3>
 
-      {/* Big Surprise — opens Wordle minigame */}
+      {/* Big Surprise */}
       <motion.div
         className="max-w-md mx-auto mb-10"
         initial={{ opacity: 0, y: 20 }}
@@ -205,32 +230,21 @@ export default function GiftZone() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 max-w-lg mx-auto">
         {vouchers.map((voucher, index) => (
-          <motion.button
+          <VoucherButton
             key={voucher.id}
-            className="voucher-btn p-4 sm:p-6 rounded-2xl backdrop-blur-sm flex flex-col items-center gap-2 relative overflow-hidden"
-            style={{
-              background: `linear-gradient(135deg, ${voucher.hex[0]}18, ${voucher.hex[1]}0a)`,
-              border: `1px solid ${voucher.hex[0]}25`,
-            }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 2.3 + index * 0.1 }}
-            whileHover={{ scale: 1.08, y: -4 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setSelectedVoucher(voucher)}
-          >
-            <span className="text-3xl sm:text-4xl">{voucher.emoji}</span>
-            <span className="text-rose-100 text-xs sm:text-sm font-medium">{voucher.title}</span>
-          </motion.button>
+            voucher={voucher}
+            index={index}
+            onSelect={setSelectedVoucher}
+          />
         ))}
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={() => setSelectedVoucher(null)}>
         {selectedVoucher && (
           <VoucherCard
             key={selectedVoucher.id}
             voucher={selectedVoucher}
-            onClose={() => setSelectedVoucher(null)}
+            onClose={handleClose}
           />
         )}
       </AnimatePresence>

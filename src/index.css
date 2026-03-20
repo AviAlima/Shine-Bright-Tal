@@ -82,15 +82,6 @@ body {
   border: 1px solid rgba(253, 164, 175, 0.3);
 }
 
-/* Voucher button hover effect */
-.voucher-btn {
-  transition: all 0.3s ease;
-}
-.voucher-btn:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 30px rgba(251, 113, 133, 0.3);
-}
-
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
