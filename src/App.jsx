@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useDateEngine } from './hooks/useDateEngine'
 import SparkleBackground from './components/SparkleBackground'
@@ -6,10 +7,28 @@ import BirthdayHeader from './components/BirthdayHeader'
 import PhotoSection from './components/PhotoSection'
 import GiftZone from './components/GiftZone'
 import DiamondSection from './components/DiamondSection'
-import DevTools from './components/DevTools'
+import HiddenTapZone from './components/HiddenTapZone'
+import SecretNumpad from './components/SecretNumpad'
+import DevPanel from './components/DevPanel'
 
 export default function App() {
   const { isBirthdayMode, forceBirthday, countdown, toggleBirthdayMode } = useDateEngine()
+  const [numpadOpen, setNumpadOpen] = useState(false)
+  const [unlocked, setUnlocked] = useState(false)
+
+  const handleTapUnlock = useCallback(() => {
+    if (!unlocked) {
+      setNumpadOpen(true)
+    } else {
+      // Already unlocked — toggle panel visibility
+      setUnlocked(prev => !prev)
+    }
+  }, [unlocked])
+
+  const handleCodeSuccess = useCallback(() => {
+    setNumpadOpen(false)
+    setUnlocked(true)
+  }, [])
 
   return (
     <div className="relative min-h-screen">
@@ -49,7 +68,19 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <DevTools
+      {/* Hidden 5-tap zone — always present, completely invisible */}
+      <HiddenTapZone onUnlock={handleTapUnlock} />
+
+      {/* Secret numpad modal */}
+      <SecretNumpad
+        open={numpadOpen}
+        onClose={() => setNumpadOpen(false)}
+        onSuccess={handleCodeSuccess}
+      />
+
+      {/* Dev control panel — only after successful auth */}
+      <DevPanel
+        visible={unlocked}
         isBirthdayMode={isBirthdayMode}
         forceBirthday={forceBirthday}
         onToggle={toggleBirthdayMode}
