@@ -1,8 +1,11 @@
 import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
+import GiftIcon from './GiftIcon'
 
 const LONG_PRESS_MS = 1500
+const RING_RADIUS = 78
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 
 export default function EntranceGate({ onUnboxed }) {
   const [pressing, setPressing] = useState(false)
@@ -16,7 +19,6 @@ export default function EntranceGate({ onUnboxed }) {
     const elapsed = Date.now() - startTimeRef.current
     const pct = Math.min(elapsed / LONG_PRESS_MS, 1)
     setProgress(pct)
-
     if (pct < 1) {
       rafRef.current = requestAnimationFrame(animateProgress)
     }
@@ -24,17 +26,14 @@ export default function EntranceGate({ onUnboxed }) {
 
   const fireExplosion = useCallback(() => {
     const colors = ['#fda4af', '#fbbf24', '#f43f5e', '#fcd34d', '#e11d48', '#ec4899', '#a855f7']
-    // Big center burst
-    confetti({ particleCount: 120, spread: 100, origin: { x: 0.5, y: 0.45 }, colors, startVelocity: 45 })
-    // Side bursts
+    confetti({ particleCount: 140, spread: 100, origin: { x: 0.5, y: 0.45 }, colors, startVelocity: 50 })
     setTimeout(() => {
-      confetti({ particleCount: 60, angle: 60, spread: 60, origin: { x: 0.15, y: 0.5 }, colors })
-      confetti({ particleCount: 60, angle: 120, spread: 60, origin: { x: 0.85, y: 0.5 }, colors })
-    }, 150)
-    // Top shower
+      confetti({ particleCount: 60, angle: 55, spread: 65, origin: { x: 0.1, y: 0.5 }, colors })
+      confetti({ particleCount: 60, angle: 125, spread: 65, origin: { x: 0.9, y: 0.5 }, colors })
+    }, 120)
     setTimeout(() => {
-      confetti({ particleCount: 80, spread: 160, origin: { x: 0.5, y: 0.2 }, colors, startVelocity: 30 })
-    }, 350)
+      confetti({ particleCount: 90, spread: 170, origin: { x: 0.5, y: 0.15 }, colors, startVelocity: 30 })
+    }, 300)
   }, [])
 
   const startPress = useCallback(() => {
@@ -44,13 +43,12 @@ export default function EntranceGate({ onUnboxed }) {
     rafRef.current = requestAnimationFrame(animateProgress)
 
     timerRef.current = setTimeout(() => {
-      // Long press completed
       setPressing(false)
       setProgress(1)
       setExploding(true)
       fireExplosion()
       // TODO: Add sound effect here
-      setTimeout(() => onUnboxed(), 1200)
+      setTimeout(() => onUnboxed(), 1100)
     }, LONG_PRESS_MS)
   }, [animateProgress, fireExplosion, onUnboxed])
 
@@ -69,94 +67,112 @@ export default function EntranceGate({ onUnboxed }) {
           className="fixed inset-0 z-20 flex flex-col items-center justify-center px-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.1 }}
-          transition={{ duration: 0.8 }}
+          exit={{ opacity: 0, scale: 1.08 }}
+          transition={{ duration: 0.7 }}
         >
-          {/* Soft radial glow background */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(253,164,175,0.08)_0%,_transparent_70%)]" />
+          {/* Soft radial glow */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(253,164,175,0.1)_0%,_transparent_65%)]" />
 
           {/* Floating hearts */}
           {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute text-rose-400/20 pointer-events-none select-none"
+              className="absolute pointer-events-none select-none"
               style={{
-                left: `${12 + i * 11}%`,
-                top: `${15 + (i % 3) * 25}%`,
-                fontSize: `${18 + (i % 4) * 8}px`,
+                left: `${10 + i * 11}%`,
+                top: `${18 + (i % 3) * 22}%`,
+                color: `rgba(251,113,133,${0.1 + (i % 3) * 0.06})`,
+                fontSize: `${16 + (i % 4) * 7}px`,
               }}
-              animate={{ y: [0, -15, 0], opacity: [0.15, 0.35, 0.15] }}
-              transition={{ duration: 3 + i * 0.4, repeat: Infinity, ease: 'easeInOut' }}
+              animate={{ y: [0, -14, 0], opacity: [0.12, 0.3, 0.12] }}
+              transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: 'easeInOut' }}
             >
               ♥
             </motion.div>
           ))}
 
-          {/* Hebrew instruction text */}
+          {/* Instruction text — English, Dancing Script */}
           <motion.p
-            className="relative text-center text-rose-200/80 text-lg sm:text-xl leading-relaxed mb-10 max-w-xs"
-            dir="rtl"
+            className="relative text-center text-rose-100/80 text-xl sm:text-2xl leading-relaxed mb-12 max-w-sm"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            style={{ fontFamily: "'Poppins', sans-serif" }}
+            style={{ fontFamily: "'Dancing Script', cursive" }}
           >
-            טל, תני לאבי נשיקה גדולה
+            Tal, give Avi a sweet kiss
             <br />
-            כדי לפתוח את המתנה...
+            to unlock your sparkle...
           </motion.p>
 
-          {/* Gift box */}
+          {/* Gift box with progress ring */}
           <motion.div
             className="relative select-none cursor-pointer"
-            initial={{ scale: 0, rotate: -15 }}
+            initial={{ scale: 0, rotate: -12 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', damping: 10, delay: 0.6 }}
+            transition={{ type: 'spring', damping: 11, delay: 0.6 }}
           >
-            {/* Heart fill ring — shows long-press progress */}
+            {/* Progress ring */}
             <svg
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              viewBox="0 0 160 160"
+              className="absolute -inset-5 pointer-events-none"
+              width="190"
+              height="190"
+              viewBox="0 0 190 190"
               style={{ transform: 'rotate(-90deg)' }}
             >
               <circle
-                cx="80" cy="80" r="72"
+                cx="95" cy="95" r={RING_RADIUS}
                 fill="none"
-                stroke="rgba(251,113,133,0.15)"
-                strokeWidth="4"
+                stroke="rgba(251,113,133,0.1)"
+                strokeWidth="3.5"
               />
               <circle
-                cx="80" cy="80" r="72"
+                cx="95" cy="95" r={RING_RADIUS}
                 fill="none"
-                stroke="url(#progressGrad)"
-                strokeWidth="4"
+                stroke="url(#ringGrad)"
+                strokeWidth="3.5"
                 strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 72}
-                strokeDashoffset={2 * Math.PI * 72 * (1 - progress)}
-                style={{ transition: pressing ? 'none' : 'stroke-dashoffset 0.3s ease' }}
+                strokeDasharray={RING_CIRCUMFERENCE}
+                strokeDashoffset={RING_CIRCUMFERENCE * (1 - progress)}
+                style={{ transition: pressing ? 'none' : 'stroke-dashoffset 0.25s ease-out' }}
               />
               <defs>
-                <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#fb7185" />
+                  <stop offset="50%" stopColor="#f43f5e" />
                   <stop offset="100%" stopColor="#fbbf24" />
                 </linearGradient>
               </defs>
             </svg>
 
-            {/* The box itself */}
+            {/* Outer pulse glow — idle only */}
+            {!pressing && (
+              <motion.div
+                className="absolute -inset-4 rounded-full pointer-events-none"
+                animate={{
+                  boxShadow: [
+                    '0 0 0px rgba(251,113,133,0)',
+                    '0 0 30px rgba(251,113,133,0.25)',
+                    '0 0 0px rgba(251,113,133,0)',
+                  ],
+                }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            )}
+
+            {/* Touch target */}
             <motion.div
-              className="w-40 h-40 flex items-center justify-center text-8xl"
+              className="w-[140px] h-[140px] flex items-center justify-center"
               animate={pressing ? {
-                rotate: [-2, 2, -2, 2, -1, 1, 0],
-                scale: [1, 1.04, 1, 1.04, 1],
+                rotate: [-1.5, 1.5, -1.5, 1.5, -0.8, 0.8, 0],
+                scale: [1, 1.03, 1, 1.03, 1],
               } : {
-                y: [0, -6, 0],
+                y: [0, -5, 0],
               }}
               transition={pressing ? {
-                duration: 0.4,
+                duration: 0.35,
                 repeat: Infinity,
               } : {
-                duration: 2.5,
+                duration: 2.8,
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
@@ -166,18 +182,18 @@ export default function EntranceGate({ onUnboxed }) {
               onContextMenu={e => e.preventDefault()}
               style={{ touchAction: 'none', WebkitTouchCallout: 'none', userSelect: 'none' }}
             >
-              🎁
+              <GiftIcon size={120} />
             </motion.div>
           </motion.div>
 
-          {/* Hint text */}
+          {/* Hint */}
           <motion.p
-            className="relative text-rose-300/30 text-xs mt-8"
+            className="relative text-rose-300/30 text-xs mt-10 tracking-wide"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
           >
-            {pressing ? '💋 ...' : 'לחצי והחזיקי...'}
+            {pressing ? '💋 ...' : 'press & hold'}
           </motion.p>
         </motion.div>
       ) : (
@@ -186,25 +202,25 @@ export default function EntranceGate({ onUnboxed }) {
           className="fixed inset-0 z-20 flex items-center justify-center"
           initial={{ opacity: 1 }}
           animate={{ opacity: 0 }}
-          transition={{ duration: 1.0, delay: 0.3 }}
+          transition={{ duration: 0.9, delay: 0.25 }}
         >
-          {/* Explosion sparkle burst */}
-          {[...Array(12)].map((_, i) => {
-            const angle = (i / 12) * 2 * Math.PI
+          {[...Array(14)].map((_, i) => {
+            const angle = (i / 14) * 2 * Math.PI
+            const dist = 100 + (i % 3) * 30
             return (
               <motion.div
                 key={i}
                 className="absolute text-2xl"
                 initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
                 animate={{
-                  x: Math.cos(angle) * 120,
-                  y: Math.sin(angle) * 120,
+                  x: Math.cos(angle) * dist,
+                  y: Math.sin(angle) * dist,
                   opacity: 0,
-                  scale: 0.3,
+                  scale: 0.2,
                 }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
+                transition={{ duration: 0.75, ease: 'easeOut' }}
               >
-                {['✨', '💖', '🌟', '💎'][i % 4]}
+                {['✨', '💖', '🌟', '💎', '💋'][i % 5]}
               </motion.div>
             )
           })}
