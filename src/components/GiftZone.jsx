@@ -239,7 +239,7 @@ export default function GiftZone() {
         ))}
       </div>
 
-      <AnimatePresence onExitComplete={() => setSelectedVoucher(null)}>
+      <AnimatePresence>
         {selectedVoucher && (
           <VoucherCard
             key={selectedVoucher.id}
