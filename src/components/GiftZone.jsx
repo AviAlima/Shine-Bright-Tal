@@ -27,9 +27,13 @@ function VoucherCard({ voucher, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={onClose}
+      transition={{ duration: 0.2 }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      {/* Backdrop — onPointerDown for instant mobile response */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onPointerDown={onClose}
+      />
 
       <motion.div
         className="relative max-w-sm w-full z-10"
@@ -37,10 +41,9 @@ function VoucherCard({ voucher, onClose }) {
         animate={{ scale: 1, rotate: 0, opacity: 1 }}
         exit={{ scale: 0.5, rotate: 8, opacity: 0 }}
         transition={{ type: 'spring', damping: 14 }}
-        onClick={e => e.stopPropagation()}
       >
         {/* Coupon card with tear-off styling */}
-        <div className="relative rounded-3xl overflow-hidden">
+        <div className="relative rounded-3xl overflow-hidden" onPointerDown={e => e.stopPropagation()}>
           {/* Top gradient bar — voucher-specific color */}
           <div
             className="h-2"
@@ -143,9 +146,9 @@ function VoucherCard({ voucher, onClose }) {
 
         {/* Close button below card */}
         <motion.button
-          className="mt-4 w-full text-center text-white/30 text-xs hover:text-white/50 transition-colors py-2"
+          className="mt-4 w-full text-center text-white/30 text-xs hover:text-white/50 transition-colors py-3"
           whileTap={{ scale: 0.95 }}
-          onClick={onClose}
+          onPointerDown={(e) => { e.stopPropagation(); onClose() }}
         >
           Close
         </motion.button>
@@ -221,9 +224,10 @@ export default function GiftZone() {
         ))}
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {selectedVoucher && (
           <VoucherCard
+            key={selectedVoucher.id}
             voucher={selectedVoucher}
             onClose={() => setSelectedVoucher(null)}
           />
