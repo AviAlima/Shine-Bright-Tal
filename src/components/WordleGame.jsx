@@ -11,7 +11,7 @@ const LEVELS = [
 const KEYBOARD_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-  ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DEL'],
+  ['DEL', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER'],
 ]
 
 function evaluateGuess(guess, answer) {
@@ -61,8 +61,8 @@ function KeyboardKey({ label, status, onPress }) {
   return (
     <motion.button
       className={`${KEY_COLORS[status || 'unused']} rounded-lg font-semibold select-none flex items-center justify-center ${
-        isWide ? 'px-2 sm:px-3 text-[10px] sm:text-xs min-w-[48px] sm:min-w-[56px]' : 'text-sm sm:text-base min-w-[28px] sm:min-w-[34px]'
-      } h-11 sm:h-12 active:brightness-125 active:scale-95 transition-all duration-75`}
+        isWide ? 'px-3 sm:px-4 text-[10px] sm:text-xs min-w-[52px] sm:min-w-[60px]' : 'text-sm sm:text-base min-w-[28px] sm:min-w-[34px]'
+      } h-[44px] sm:h-12 active:brightness-125 active:scale-95 transition-all duration-75`}
       onClick={() => onPress(label)}
       whileTap={{ scale: 0.92, brightness: 1.3 }}
       type="button"

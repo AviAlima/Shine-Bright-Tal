@@ -83,8 +83,8 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Hidden 5-tap zone — always present, completely invisible */}
-      <HiddenTapZone onUnlock={handleTapUnlock} />
+      {/* Hidden 5-tap zone — only on countdown and entrance gate screens */}
+      {!showDashboard && <HiddenTapZone onUnlock={handleTapUnlock} />}
 
       {/* Secret numpad modal */}
       <SecretNumpad
