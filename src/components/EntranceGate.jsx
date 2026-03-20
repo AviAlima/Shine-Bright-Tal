@@ -3,6 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import GiftIcon from './GiftIcon'
 
 const LONG_PRESS_MS = 1500
+const FORGIVE_THRESHOLD = 0.75
+const RING_SIZE = 190
+const RING_R = 78
+const RING_C = 2 * Math.PI * RING_R
 
 // Tiny sparkle particles that radiate during long press
 function PressSparkles({ active, progress }) {
@@ -46,7 +50,8 @@ function PressSparkles({ active, progress }) {
 export default function EntranceGate({ onUnboxed }) {
   const [pressing, setPressing] = useState(false)
   const [progress, setProgress] = useState(0)
-  const [phase, setPhase] = useState('idle') // idle | pressing | flash | done
+  const [phase, setPhase] = useState('idle') // idle | pressing | completing | flash | done
+  const [passedThreshold, setPassedThreshold] = useState(false)
   const timerRef = useRef(null)
   const rafRef = useRef(null)
   const startTimeRef = useRef(null)
@@ -55,33 +60,76 @@ export default function EntranceGate({ onUnboxed }) {
     const elapsed = Date.now() - startTimeRef.current
     const pct = Math.min(elapsed / LONG_PRESS_MS, 1)
     setProgress(pct)
+
+    // Mark threshold crossed
+    if (pct >= FORGIVE_THRESHOLD) {
+      setPassedThreshold(true)
+    }
+
     if (pct < 1) {
       rafRef.current = requestAnimationFrame(animateProgress)
     }
+  }, [])
+
+  const triggerSuccess = useCallback(() => {
+    setPressing(false)
+    setProgress(1)
+    setPhase('flash')
   }, [])
 
   const startPress = useCallback(() => {
     setPressing(true)
     setPhase('pressing')
     setProgress(0)
+    setPassedThreshold(false)
     startTimeRef.current = Date.now()
     rafRef.current = requestAnimationFrame(animateProgress)
 
     timerRef.current = setTimeout(() => {
-      setPressing(false)
-      setProgress(1)
-      setPhase('flash')
-      // TODO: Add sound effect here
+      triggerSuccess()
     }, LONG_PRESS_MS)
-  }, [animateProgress])
+  }, [animateProgress, triggerSuccess])
 
   const cancelPress = useCallback(() => {
+    if (phase !== 'pressing') return
     if (timerRef.current) clearTimeout(timerRef.current)
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
+
+    // Forgiving release: if past 75%, auto-complete
+    if (passedThreshold) {
+      setPressing(false)
+      setPhase('completing')
+      // Animate remaining progress then trigger flash
+      return
+    }
+
     setPressing(false)
     setPhase('idle')
     setProgress(0)
-  }, [])
+    setPassedThreshold(false)
+  }, [phase, passedThreshold])
+
+  // Auto-complete animation when released after threshold
+  useEffect(() => {
+    if (phase !== 'completing') return
+    const start = performance.now()
+    const startProg = progress
+    const remaining = 1 - startProg
+    const duration = remaining * 400 // fast fill for remaining
+
+    const animate = (now) => {
+      const elapsed = now - start
+      const t = Math.min(elapsed / duration, 1)
+      setProgress(startProg + remaining * t)
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(animate)
+      } else {
+        triggerSuccess()
+      }
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [phase]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Flash phase → transition to dashboard
   useEffect(() => {
@@ -94,9 +142,10 @@ export default function EntranceGate({ onUnboxed }) {
     }
   }, [phase, onUnboxed])
 
-  // Inner glow intensity based on press progress
-  const glowOpacity = pressing ? 0.15 + progress * 0.5 : 0
-  const glowRadius = pressing ? 80 + progress * 80 : 80
+  // Glow intensity
+  const isActive = pressing || phase === 'completing'
+  const glowOpacity = isActive ? 0.15 + progress * 0.5 : 0
+  const glowSize = isActive ? 80 + progress * 80 : 80
 
   return (
     <AnimatePresence>
@@ -167,100 +216,130 @@ export default function EntranceGate({ onUnboxed }) {
             to unlock your sparkle...
           </motion.p>
 
-          {/* Gift box area */}
+          {/* Gift box — centered container with grid for perfect alignment */}
           <motion.div
             className="relative select-none cursor-pointer"
+            style={{ width: RING_SIZE, height: RING_SIZE }}
             initial={{ scale: 0, rotate: -12 }}
             animate={{ scale: phase === 'flash' ? 1.15 : 1, rotate: 0 }}
             transition={phase === 'flash' ? { duration: 0.3 } : { type: 'spring', damping: 11, delay: 0.6 }}
           >
-            {/* Inner glow — accumulates during press */}
-            <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none transition-all"
-              style={{
-                width: glowRadius * 2,
-                height: glowRadius * 2,
-                background: `radial-gradient(circle, rgba(253,200,140,${glowOpacity}) 0%, rgba(251,113,133,${glowOpacity * 0.5}) 50%, transparent 75%)`,
-                transitionDuration: pressing ? '0ms' : '300ms',
-              }}
-            />
-
-            {/* Progress ring */}
-            <svg
-              className="absolute -inset-5 pointer-events-none"
-              width="190"
-              height="190"
-              viewBox="0 0 190 190"
-              style={{ transform: 'rotate(-90deg)' }}
-            >
-              <circle cx="95" cy="95" r="78" fill="none" stroke="rgba(251,113,133,0.08)" strokeWidth="3" />
-              <circle
-                cx="95" cy="95" r="78"
-                fill="none"
-                stroke="url(#ringGrad2)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 78}
-                strokeDashoffset={2 * Math.PI * 78 * (1 - progress)}
-                style={{ transition: pressing ? 'none' : 'stroke-dashoffset 0.25s ease-out' }}
-              />
-              <defs>
-                <linearGradient id="ringGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#e2e8f0" />
-                  <stop offset="50%" stopColor="#fbbf24" />
-                  <stop offset="100%" stopColor="#fcd34d" />
-                </linearGradient>
-              </defs>
-            </svg>
-
-            {/* Idle pulse glow */}
-            {!pressing && phase === 'idle' && (
-              <motion.div
-                className="absolute -inset-4 rounded-full pointer-events-none"
-                animate={{
-                  boxShadow: [
-                    '0 0 0px rgba(252,211,77,0)',
-                    '0 0 28px rgba(252,211,77,0.2)',
-                    '0 0 0px rgba(252,211,77,0)',
-                  ],
+            {/* All layers share the same center via absolute + inset-0 + grid place-items-center */}
+            <div className="absolute inset-0 grid place-items-center pointer-events-none">
+              {/* Inner glow */}
+              <div
+                className="rounded-full transition-all"
+                style={{
+                  width: glowSize * 2,
+                  height: glowSize * 2,
+                  background: `radial-gradient(circle, rgba(253,200,140,${glowOpacity}) 0%, rgba(251,113,133,${glowOpacity * 0.5}) 50%, transparent 75%)`,
+                  transitionDuration: isActive ? '0ms' : '300ms',
                 }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
               />
-            )}
+            </div>
 
-            {/* Radiating sparkle particles during press */}
-            <PressSparkles active={pressing} progress={progress} />
+            <div className="absolute inset-0 grid place-items-center pointer-events-none">
+              {/* Progress ring — SVG centered in the same cell */}
+              <svg
+                width={RING_SIZE}
+                height={RING_SIZE}
+                viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+                style={{ transform: 'rotate(-90deg)' }}
+              >
+                <circle cx="95" cy="95" r={RING_R} fill="none" stroke="rgba(251,113,133,0.08)" strokeWidth="3" />
+                <circle
+                  cx="95" cy="95" r={RING_R}
+                  fill="none"
+                  stroke="url(#ringGrad2)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={RING_C}
+                  strokeDashoffset={RING_C * (1 - progress)}
+                  style={{ transition: isActive ? 'none' : 'stroke-dashoffset 0.25s ease-out' }}
+                />
+                <defs>
+                  <linearGradient id="ringGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#e2e8f0" />
+                    <stop offset="50%" stopColor="#fbbf24" />
+                    <stop offset="100%" stopColor="#fcd34d" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
 
-            {/* Touch target */}
-            <motion.div
-              className="w-[140px] h-[140px] flex items-center justify-center"
-              animate={pressing ? {
-                rotate: [-1.5, 1.5, -1.5, 1.5, -0.8, 0.8, 0],
-                scale: [1, 1.03, 1, 1.03, 1],
-              } : phase === 'flash' ? {
-                scale: [1, 1.3],
-                opacity: [1, 0],
-              } : {
-                y: [0, -5, 0],
-              }}
-              transition={pressing ? {
-                duration: 0.35,
-                repeat: Infinity,
-              } : phase === 'flash' ? {
-                duration: 0.5,
-              } : {
-                duration: 2.8,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              onPointerDown={phase === 'idle' ? startPress : undefined}
-              onPointerUp={cancelPress}
-              onPointerLeave={cancelPress}
-              onContextMenu={e => e.preventDefault()}
-              style={{ touchAction: 'none', WebkitTouchCallout: 'none', userSelect: 'none' }}
-            >
-              <GiftIcon size={120} />
-            </motion.div>
+            <div className="absolute inset-0 grid place-items-center pointer-events-none">
+              {/* Idle pulse glow */}
+              {!isActive && phase === 'idle' && (
+                <motion.div
+                  className="rounded-full"
+                  style={{ width: RING_SIZE - 20, height: RING_SIZE - 20 }}
+                  animate={{
+                    boxShadow: [
+                      '0 0 0px rgba(252,211,77,0)',
+                      '0 0 28px rgba(252,211,77,0.2)',
+                      '0 0 0px rgba(252,211,77,0)',
+                    ],
+                  }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              )}
+
+              {/* Threshold starburst — brief flash at 75% */}
+              <AnimatePresence>
+                {passedThreshold && pressing && (
+                  <motion.div
+                    className="rounded-full"
+                    style={{ width: 160, height: 160 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: [0, 0.5, 0], scale: [0.9, 1.3, 1.4] }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-gold-300/30 to-transparent" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="absolute inset-0 grid place-items-center">
+              {/* Radiating sparkle particles */}
+              <div className="relative w-[140px] h-[140px]">
+                <PressSparkles active={isActive} progress={progress} />
+              </div>
+            </div>
+
+            {/* Touch target — gift icon, also grid-centered */}
+            <div className="absolute inset-0 grid place-items-center">
+              <motion.div
+                className="w-[140px] h-[140px] flex items-center justify-center"
+                animate={isActive ? {
+                  rotate: [-1.5, 1.5, -1.5, 1.5, -0.8, 0.8, 0],
+                  scale: [1, 1.03, 1, 1.03, 1],
+                } : phase === 'flash' ? {
+                  scale: [1, 1.3],
+                  opacity: [1, 0],
+                } : {
+                  y: [0, -5, 0],
+                }}
+                transition={isActive ? {
+                  duration: 0.35,
+                  repeat: Infinity,
+                } : phase === 'flash' ? {
+                  duration: 0.5,
+                } : {
+                  duration: 2.8,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                onPointerDown={phase === 'idle' ? startPress : undefined}
+                onPointerUp={cancelPress}
+                onPointerLeave={cancelPress}
+                onContextMenu={e => e.preventDefault()}
+                style={{ touchAction: 'none', WebkitTouchCallout: 'none', userSelect: 'none' }}
+              >
+                <GiftIcon size={120} />
+              </motion.div>
+            </div>
           </motion.div>
 
           {/* Hint */}
@@ -270,7 +349,7 @@ export default function EntranceGate({ onUnboxed }) {
             animate={{ opacity: phase === 'flash' ? 0 : 1 }}
             transition={{ delay: phase === 'idle' ? 1.2 : 0 }}
           >
-            {pressing ? '...' : 'press & hold'}
+            {isActive ? '...' : 'press & hold'}
           </motion.p>
         </motion.div>
       )}

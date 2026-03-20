@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import DiamondEarringsSVG from './DiamondEarringsSVG'
 
@@ -153,14 +153,35 @@ export default function WordleGame({ open, onClose }) {
     setShowHint(false)
   }, [])
 
+  // Body scroll lock
+  useEffect(() => {
+    if (!open) return
+    const scrollY = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.overflow = ''
+      window.scrollTo(0, scrollY)
+    }
+  }, [open])
+
   if (!open) return null
 
   return (
     <motion.div
-      className="fixed inset-0 z-[250] flex flex-col"
+      className="fixed inset-0 z-[250] flex flex-col overscroll-none"
+      style={{ touchAction: 'none' }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onTouchMove={e => e.stopPropagation()}
     >
       <div className="absolute inset-0 bg-[#0c1018]/98 backdrop-blur-xl" />
 
