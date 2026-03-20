@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 
-export default function DevPanel({ visible, isBirthdayMode, forceBirthday, onToggle }) {
+export default function DevPanel({ visible, isBirthdayMode, forceBirthday, giftOpened, onToggle, onResetGift }) {
   return (
     <AnimatePresence>
       {visible && (
@@ -11,7 +11,8 @@ export default function DevPanel({ visible, isBirthdayMode, forceBirthday, onTog
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', damping: 20 }}
         >
-          <div className="max-w-sm mx-auto bg-slate-800/90 backdrop-blur-md border border-slate-600/40 rounded-2xl px-5 py-4 shadow-2xl">
+          <div className="max-w-sm mx-auto bg-slate-800/90 backdrop-blur-md border border-slate-600/40 rounded-2xl px-5 py-4 shadow-2xl space-y-3">
+            {/* Birthday mode toggle */}
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-300 text-sm font-medium">
@@ -34,6 +35,16 @@ export default function DevPanel({ visible, isBirthdayMode, forceBirthday, onTog
                 />
               </button>
             </div>
+
+            {/* Reset gift button — only when gift has been opened */}
+            {isBirthdayMode && giftOpened && (
+              <button
+                onClick={onResetGift}
+                className="w-full py-2 rounded-xl bg-amber-500/15 border border-amber-400/20 text-amber-300 text-sm hover:bg-amber-500/25 transition-colors"
+              >
+                Reset Unboxing
+              </button>
+            )}
           </div>
         </motion.div>
       )}
