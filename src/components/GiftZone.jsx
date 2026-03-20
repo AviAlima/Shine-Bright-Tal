@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import WordleGame from './WordleGame'
 
 const vouchers = [
   { id: 'hand', emoji: '🤝', title: 'Hand Holding', description: 'One unlimited hand-holding session, redeemable anytime, anywhere.', color: 'from-rose-400 to-pink-500' },
@@ -68,6 +69,7 @@ function VoucherCard({ voucher, onClose }) {
 
 export default function GiftZone() {
   const [selectedVoucher, setSelectedVoucher] = useState(null)
+  const [wordleOpen, setWordleOpen] = useState(false)
 
   return (
     <motion.section
@@ -80,7 +82,7 @@ export default function GiftZone() {
         Gift Zone
       </h3>
 
-      {/* Big Surprise - TODO: Implement actual surprise feature */}
+      {/* Big Surprise — opens Wordle minigame */}
       <motion.div
         className="max-w-md mx-auto mb-10"
         initial={{ opacity: 0, y: 20 }}
@@ -91,6 +93,7 @@ export default function GiftZone() {
           className="w-full py-6 rounded-2xl bg-gradient-to-r from-gold-400 via-gold-300 to-gold-400 text-slate-900 font-bold text-lg relative overflow-hidden group"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={() => setWordleOpen(true)}
         >
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
@@ -98,11 +101,10 @@ export default function GiftZone() {
             transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
           />
           <span className="relative z-10">
-            🎁 The Big Surprise 🎁
+            💎 The Big Surprise 💎
           </span>
-          {/* TODO: Link to actual surprise content */}
         </motion.button>
-        <p className="text-center text-rose-300/30 text-xs mt-2">Coming soon...</p>
+        <p className="text-center text-rose-300/30 text-xs mt-2">Can you guess what it is?</p>
       </motion.div>
 
       {/* Affection Vouchers */}
@@ -135,6 +137,12 @@ export default function GiftZone() {
             voucher={selectedVoucher}
             onClose={() => setSelectedVoucher(null)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {wordleOpen && (
+          <WordleGame open={wordleOpen} onClose={() => setWordleOpen(false)} />
         )}
       </AnimatePresence>
     </motion.section>
