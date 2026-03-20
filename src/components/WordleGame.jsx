@@ -42,29 +42,29 @@ function evaluateGuess(guess, answer) {
 }
 
 const TILE_COLORS = {
-  correct: 'bg-emerald-500 border-emerald-400',
-  present: 'bg-amber-500 border-amber-400',
-  absent: 'bg-slate-600 border-slate-500',
-  empty: 'border-slate-600/40 bg-transparent',
-  active: 'border-rose-400/50 bg-white/[0.04]',
+  correct: 'bg-emerald-500/90 border-emerald-400/80',
+  present: 'bg-amber-500/90 border-amber-400/80',
+  absent: 'bg-slate-700/80 border-slate-500/40',
+  empty: 'border-slate-500/30 bg-white/[0.03]',
+  active: 'border-rose-400/60 bg-white/[0.06]',
 }
 
 const KEY_COLORS = {
-  correct: 'bg-emerald-500 text-white',
-  present: 'bg-amber-500 text-white',
-  absent: 'bg-slate-700 text-slate-400',
-  unused: 'bg-white/[0.08] text-white border border-white/[0.06]',
+  correct: 'bg-emerald-500/90 text-white border border-emerald-400/50',
+  present: 'bg-amber-500/90 text-white border border-amber-400/50',
+  absent: 'bg-slate-800/80 text-slate-500 border border-slate-600/30',
+  unused: 'bg-[#1e293b]/70 text-white border border-white/[0.12] backdrop-blur-sm',
 }
 
 function KeyboardKey({ label, status, onPress }) {
   const isWide = label === 'ENTER' || label === 'DEL'
   return (
     <motion.button
-      className={`${KEY_COLORS[status || 'unused']} rounded-lg font-medium select-none flex items-center justify-center ${
+      className={`${KEY_COLORS[status || 'unused']} rounded-lg font-semibold select-none flex items-center justify-center ${
         isWide ? 'px-2 sm:px-3 text-[10px] sm:text-xs min-w-[48px] sm:min-w-[56px]' : 'text-sm sm:text-base min-w-[28px] sm:min-w-[34px]'
-      } h-11 sm:h-12`}
+      } h-11 sm:h-12 active:brightness-125 active:scale-95 transition-all duration-75`}
       onClick={() => onPress(label)}
-      whileTap={{ scale: 0.9 }}
+      whileTap={{ scale: 0.92, brightness: 1.3 }}
       type="button"
     >
       {label}
@@ -183,7 +183,7 @@ export default function WordleGame({ open, onClose }) {
       exit={{ opacity: 0 }}
       onTouchMove={e => e.stopPropagation()}
     >
-      <div className="absolute inset-0 bg-[#0c1018]/98 backdrop-blur-xl" />
+      <div className="absolute inset-0 bg-[#0f172a]/[0.97] backdrop-blur-xl" />
 
       <div className="relative z-10 flex flex-col h-full max-w-lg mx-auto w-full px-3 sm:px-4">
         {/* Header */}

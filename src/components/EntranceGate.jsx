@@ -145,7 +145,6 @@ export default function EntranceGate({ onUnboxed }) {
   // Glow intensity
   const isActive = pressing || phase === 'completing'
   const glowOpacity = isActive ? 0.15 + progress * 0.5 : 0
-  const glowSize = isActive ? 80 + progress * 80 : 80
 
   return (
     <AnimatePresence>
@@ -216,7 +215,7 @@ export default function EntranceGate({ onUnboxed }) {
             to unlock your sparkle...
           </motion.p>
 
-          {/* Gift box — centered container with grid for perfect alignment */}
+          {/* Gift box — all layers absolutely centered with translate(-50%,-50%) */}
           <motion.div
             className="relative select-none cursor-pointer"
             style={{ width: RING_SIZE, height: RING_SIZE }}
@@ -224,122 +223,133 @@ export default function EntranceGate({ onUnboxed }) {
             animate={{ scale: phase === 'flash' ? 1.15 : 1, rotate: 0 }}
             transition={phase === 'flash' ? { duration: 0.3 } : { type: 'spring', damping: 11, delay: 0.6 }}
           >
-            {/* All layers share the same center via absolute + inset-0 + grid place-items-center */}
-            <div className="absolute inset-0 grid place-items-center pointer-events-none">
-              {/* Inner glow */}
-              <div
-                className="rounded-full transition-all"
-                style={{
-                  width: glowSize * 2,
-                  height: glowSize * 2,
-                  background: `radial-gradient(circle, rgba(253,200,140,${glowOpacity}) 0%, rgba(251,113,133,${glowOpacity * 0.5}) 50%, transparent 75%)`,
-                  transitionDuration: isActive ? '0ms' : '300ms',
-                }}
+            {/* Inner glow — fixed size, scaled via transform to keep center locked */}
+            <div
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                width: 160,
+                height: 160,
+                top: '50%',
+                left: '50%',
+                transform: `translate(-50%, -50%) scale(${isActive ? 1 + progress : 0.5})`,
+                background: `radial-gradient(circle, rgba(253,200,140,${glowOpacity}) 0%, rgba(251,113,133,${glowOpacity * 0.5}) 50%, transparent 75%)`,
+                transition: isActive ? 'transform 0ms, background 0ms' : 'transform 300ms ease-out, background 300ms ease-out',
+              }}
+            />
+
+            {/* Progress ring */}
+            <svg
+              className="absolute pointer-events-none"
+              width={RING_SIZE}
+              height={RING_SIZE}
+              viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+              style={{ top: 0, left: 0, transform: 'rotate(-90deg)' }}
+            >
+              <circle cx="95" cy="95" r={RING_R} fill="none" stroke="rgba(251,113,133,0.08)" strokeWidth="3" />
+              <circle
+                cx="95" cy="95" r={RING_R}
+                fill="none"
+                stroke="url(#ringGrad2)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeDasharray={RING_C}
+                strokeDashoffset={RING_C * (1 - progress)}
+                style={{ transition: isActive ? 'none' : 'stroke-dashoffset 0.25s ease-out' }}
               />
-            </div>
+              <defs>
+                <linearGradient id="ringGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#e2e8f0" />
+                  <stop offset="50%" stopColor="#fbbf24" />
+                  <stop offset="100%" stopColor="#fcd34d" />
+                </linearGradient>
+              </defs>
+            </svg>
 
-            <div className="absolute inset-0 grid place-items-center pointer-events-none">
-              {/* Progress ring — SVG centered in the same cell */}
-              <svg
-                width={RING_SIZE}
-                height={RING_SIZE}
-                viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
-                style={{ transform: 'rotate(-90deg)' }}
-              >
-                <circle cx="95" cy="95" r={RING_R} fill="none" stroke="rgba(251,113,133,0.08)" strokeWidth="3" />
-                <circle
-                  cx="95" cy="95" r={RING_R}
-                  fill="none"
-                  stroke="url(#ringGrad2)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeDasharray={RING_C}
-                  strokeDashoffset={RING_C * (1 - progress)}
-                  style={{ transition: isActive ? 'none' : 'stroke-dashoffset 0.25s ease-out' }}
-                />
-                <defs>
-                  <linearGradient id="ringGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#e2e8f0" />
-                    <stop offset="50%" stopColor="#fbbf24" />
-                    <stop offset="100%" stopColor="#fcd34d" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-
-            <div className="absolute inset-0 grid place-items-center pointer-events-none">
-              {/* Idle pulse glow */}
-              {!isActive && phase === 'idle' && (
-                <motion.div
-                  className="rounded-full"
-                  style={{ width: RING_SIZE - 20, height: RING_SIZE - 20 }}
-                  animate={{
-                    boxShadow: [
-                      '0 0 0px rgba(252,211,77,0)',
-                      '0 0 28px rgba(252,211,77,0.2)',
-                      '0 0 0px rgba(252,211,77,0)',
-                    ],
-                  }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              )}
-
-              {/* Threshold starburst — brief flash at 75% */}
-              <AnimatePresence>
-                {passedThreshold && pressing && (
-                  <motion.div
-                    className="rounded-full"
-                    style={{ width: 160, height: 160 }}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: [0, 0.5, 0], scale: [0.9, 1.3, 1.4] }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    <div className="w-full h-full rounded-full bg-gradient-to-br from-gold-300/30 to-transparent" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="absolute inset-0 grid place-items-center">
-              {/* Radiating sparkle particles */}
-              <div className="relative w-[140px] h-[140px]">
-                <PressSparkles active={isActive} progress={progress} />
-              </div>
-            </div>
-
-            {/* Touch target — gift icon, also grid-centered */}
-            <div className="absolute inset-0 grid place-items-center">
+            {/* Idle pulse glow — centered */}
+            {!isActive && phase === 'idle' && (
               <motion.div
-                className="w-[140px] h-[140px] flex items-center justify-center"
-                animate={isActive ? {
-                  rotate: [-1.5, 1.5, -1.5, 1.5, -0.8, 0.8, 0],
-                  scale: [1, 1.03, 1, 1.03, 1],
-                } : phase === 'flash' ? {
-                  scale: [1, 1.3],
-                  opacity: [1, 0],
-                } : {
-                  y: [0, -5, 0],
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  width: RING_SIZE - 20,
+                  height: RING_SIZE - 20,
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
                 }}
-                transition={isActive ? {
-                  duration: 0.35,
-                  repeat: Infinity,
-                } : phase === 'flash' ? {
-                  duration: 0.5,
-                } : {
-                  duration: 2.8,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
+                animate={{
+                  boxShadow: [
+                    '0 0 0px rgba(252,211,77,0)',
+                    '0 0 28px rgba(252,211,77,0.2)',
+                    '0 0 0px rgba(252,211,77,0)',
+                  ],
                 }}
-                onPointerDown={phase === 'idle' ? startPress : undefined}
-                onPointerUp={cancelPress}
-                onPointerLeave={cancelPress}
-                onContextMenu={e => e.preventDefault()}
-                style={{ touchAction: 'none', WebkitTouchCallout: 'none', userSelect: 'none' }}
-              >
-                <GiftIcon size={120} />
-              </motion.div>
+                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            )}
+
+            {/* Threshold starburst — centered */}
+            <AnimatePresence>
+              {passedThreshold && pressing && (
+                <motion.div
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    width: 160,
+                    height: 160,
+                    top: '50%',
+                    left: '50%',
+                    x: '-50%',
+                    y: '-50%',
+                  }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: [0, 0.5, 0], scale: [0.9, 1.3, 1.4] }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <div className="w-full h-full rounded-full bg-[radial-gradient(circle,_rgba(252,211,77,0.3)_0%,_transparent_70%)]" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Radiating sparkle particles — centered */}
+            <div
+              className="absolute pointer-events-none"
+              style={{ width: 140, height: 140, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+            >
+              <PressSparkles active={isActive} progress={progress} />
             </div>
+
+            {/* Touch target — gift icon, centered */}
+            <motion.div
+              className="absolute flex items-center justify-center"
+              style={{ width: 140, height: 140, top: '50%', left: '50%', x: '-50%', y: '-50%' }}
+              animate={isActive ? {
+                rotate: [-1.5, 1.5, -1.5, 1.5, -0.8, 0.8, 0],
+                scale: [1, 1.03, 1, 1.03, 1],
+              } : phase === 'flash' ? {
+                scale: [1, 1.3],
+                opacity: [1, 0],
+              } : {
+                y: ['-50%', 'calc(-50% - 5px)', '-50%'],
+              }}
+              transition={isActive ? {
+                duration: 0.35,
+                repeat: Infinity,
+              } : phase === 'flash' ? {
+                duration: 0.5,
+              } : {
+                duration: 2.8,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              onPointerDown={phase === 'idle' ? startPress : undefined}
+              onPointerUp={cancelPress}
+              onPointerLeave={cancelPress}
+              onContextMenu={e => e.preventDefault()}
+            >
+              <div style={{ touchAction: 'none', WebkitTouchCallout: 'none', userSelect: 'none' }}>
+                <GiftIcon size={120} />
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Hint */}
