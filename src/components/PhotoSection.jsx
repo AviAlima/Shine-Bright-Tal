@@ -4,16 +4,16 @@ import { motion, AnimatePresence } from 'framer-motion'
 const BASE = import.meta.env.BASE_URL + 'memories/'
 
 const MEMORIES = [
-  { id: 1, title: 'Mustache', file: '1.jpg' },
-  { id: 2, title: 'Chocolate', file: '2.jpg' },
-  { id: 3, title: 'By the Lake', file: '3.jpg' },
-  { id: 4, title: 'With Hugo', file: '4.jpg' },
-  { id: 5, title: 'Leaving Home', file: '5.jpg' },
-  { id: 6, title: 'Cooking', file: '6.mp4', video: true },
-  { id: 7, title: 'Towels', file: '7.jpg' },
-  { id: 8, title: 'First Trip Abroad', file: '8.jpg' },
-  { id: 9, title: "At Tassi's", file: '9.jpg' },
-  { id: 10, title: 'Under Fire', file: '10.jpg' },
+  { id: 1, title: 'Mustache', file: '1-mustache/photo.jpg' },
+  { id: 2, title: 'Chocolate', file: '2-chocolate/photo.jpg' },
+  { id: 3, title: 'By the Lake', file: '3-by-the-lake/photo.jpg' },
+  { id: 4, title: 'With Hugo', file: '4-with-hugo/photo.jpg' },
+  { id: 5, title: 'Leaving Home', file: '5-leaving-home/photo.jpg' },
+  { id: 6, title: 'Cooking', file: '6-cooking/video.mp4', video: true },
+  { id: 7, title: 'Towels', file: '7-towels/photo.jpg' },
+  { id: 8, title: 'First Trip Abroad', file: '8-first-trip-abroad/photo.jpg' },
+  { id: 9, title: "At Tassi's", file: '9-at-tassis/photo.jpg' },
+  { id: 10, title: 'Under Fire', file: '10-under-fire/photo.jpg' },
 ]
 
 function LockedTile({ memory, index, onReveal, revealed }) {
