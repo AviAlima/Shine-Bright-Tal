@@ -1,8 +1,5 @@
 import { motion } from 'framer-motion'
 
-// TODO: Integrate specific song player here
-// TODO: Add diamond earrings reveal animation
-
 export default function DiamondSection() {
   return (
     <motion.section
@@ -32,21 +29,11 @@ export default function DiamondSection() {
           Shine Bright
         </h3>
 
-        <p className="text-rose-200/50 text-sm leading-relaxed mb-8">
+        <p className="text-rose-200/50 text-sm leading-relaxed">
           Like a diamond, you sparkle in ways that light up everything around you.
           <br />
           This is just the beginning...
         </p>
-
-        {/* TODO: Song player integration */}
-        <motion.div
-          className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-rose-300/20"
-          whileHover={{ scale: 1.05 }}
-        >
-          <span className="text-xl">🎵</span>
-          <span className="text-rose-200/60 text-sm">A special song awaits...</span>
-          {/* TODO: Add play button and audio integration */}
-        </motion.div>
       </motion.div>
     </motion.section>
   )

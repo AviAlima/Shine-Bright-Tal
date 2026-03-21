@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useDateEngine } from './hooks/useDateEngine'
+import { useBackgroundMusic } from './hooks/useBackgroundMusic'
 import SparkleBackground from './components/SparkleBackground'
 import Countdown from './components/Countdown'
 import EntranceGate from './components/EntranceGate'
@@ -11,9 +12,11 @@ import DiamondSection from './components/DiamondSection'
 import HiddenTapZone from './components/HiddenTapZone'
 import SecretNumpad from './components/SecretNumpad'
 import DevPanel from './components/DevPanel'
+import MuteToggle from './components/MuteToggle'
 
 export default function App() {
   const { isBirthdayMode, forceBirthday, countdown, toggleBirthdayMode } = useDateEngine()
+  const { muted, started, startMusic, toggleMute } = useBackgroundMusic()
   const [numpadOpen, setNumpadOpen] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [giftOpened, setGiftOpened] = useState(false)
@@ -33,7 +36,9 @@ export default function App() {
 
   const handleUnboxed = useCallback(() => {
     setGiftOpened(true)
-  }, [])
+    // Start background music 5s after the gift is opened (user has interacted)
+    startMusic()
+  }, [startMusic])
 
   // Determine which view to show in birthday mode
   const showEntranceGate = isBirthdayMode && !giftOpened
@@ -82,6 +87,11 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Mute toggle — only after music has started */}
+      {started && showDashboard && (
+        <MuteToggle muted={muted} onToggle={toggleMute} />
+      )}
 
       {/* Hidden 5-tap zone — only on countdown and entrance gate screens */}
       {!showDashboard && <HiddenTapZone onUnlock={handleTapUnlock} />}
