@@ -46,15 +46,18 @@ function LockedTile({ memory, index, onReveal, revealed }) {
         )
       ) : (
         // Locked frosted tile
-        <div className="absolute inset-0 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] flex flex-col items-center justify-center gap-2">
+        <div className="absolute inset-0 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] flex flex-col items-center justify-center gap-1.5 px-2">
           <span
-            className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-amber-300 to-amber-500"
+            className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-amber-300 to-amber-500"
             style={{ fontFamily: "Georgia, serif" }}
           >
             {memory.id}
           </span>
+          <span className="text-white/40 text-[11px] text-center leading-tight">
+            {memory.title}
+          </span>
           {memory.video && (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white/20">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-white/20 mt-0.5">
               <polygon points="5,3 19,12 5,21" />
             </svg>
           )}
