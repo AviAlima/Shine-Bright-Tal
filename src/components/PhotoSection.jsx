@@ -75,24 +75,6 @@ function LockedTile({ memory, index, onReveal, revealed }) {
 }
 
 function Lightbox({ memory, onClose }) {
-  // Lock body scroll
-  useEffect(() => {
-    const y = window.scrollY
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${y}px`
-    document.body.style.left = '0'
-    document.body.style.right = '0'
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.overflow = ''
-      window.scrollTo(0, y)
-    }
-  }, [])
-
   return (
     <motion.div
       className="fixed inset-0 z-[260] flex flex-col items-center justify-center"
@@ -155,6 +137,15 @@ function Lightbox({ memory, onClose }) {
 export default function PhotoSection() {
   const [revealed, setRevealed] = useState(new Set())
   const [lightboxItem, setLightboxItem] = useState(null)
+
+  // Scroll lock managed here — not inside the animating Lightbox component
+  // so it doesn't flicker on exit animation cleanup
+  useEffect(() => {
+    if (!lightboxItem) return
+    const html = document.documentElement
+    html.style.overflow = 'hidden'
+    return () => { html.style.overflow = '' }
+  }, [lightboxItem])
 
   const handleReveal = (memory) => {
     setRevealed(prev => new Set(prev).add(memory.id))
