@@ -12,11 +12,10 @@ import DiamondSection from './components/DiamondSection'
 import HiddenTapZone from './components/HiddenTapZone'
 import SecretNumpad from './components/SecretNumpad'
 import DevPanel from './components/DevPanel'
-import MuteToggle from './components/MuteToggle'
 
 export default function App() {
   const { isBirthdayMode, forceBirthday, countdown, toggleBirthdayMode } = useDateEngine()
-  const { muted, started, startMusic, toggleMute } = useBackgroundMusic()
+  const { startMusic } = useBackgroundMusic()
   const [numpadOpen, setNumpadOpen] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [giftOpened, setGiftOpened] = useState(false)
@@ -87,11 +86,6 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Mute toggle — only after music has started */}
-      {started && showDashboard && (
-        <MuteToggle muted={muted} onToggle={toggleMute} />
-      )}
 
       {/* Hidden 5-tap zone — only on countdown and entrance gate screens */}
       {!showDashboard && <HiddenTapZone onUnlock={handleTapUnlock} />}
