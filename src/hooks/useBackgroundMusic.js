@@ -19,6 +19,7 @@ export function useBackgroundMusic() {
     const audio = new Audio(MUSIC_PATH)
     audio.loop = true
     audio.volume = 0
+    audio.muted = true
     audio.preload = 'auto'
     audioRef.current = audio
 
@@ -33,6 +34,11 @@ export function useBackgroundMusic() {
   const fadeIn = useCallback(() => {
     const audio = audioRef.current
     if (!audio) return
+
+    // Unmute and start from silent — volume prop works on desktop,
+    // muted prop handles iOS
+    audio.muted = false
+    audio.volume = 0
 
     const stepSize = TARGET_VOLUME / FADE_STEPS
     const stepInterval = FADE_DURATION_MS / FADE_STEPS
@@ -59,10 +65,11 @@ export function useBackgroundMusic() {
   const playingRef = useRef(false)
 
   // Secure iOS audio permission — call directly from a user gesture handler.
-  // Plays at volume 0 so the browser unlocks the AudioContext.
+  // Plays muted so the browser unlocks the AudioContext (iOS ignores volume prop).
   const securePermission = useCallback(() => {
     const audio = audioRef.current
     if (!audio || playingRef.current) return
+    audio.muted = true
     audio.volume = 0
     audio.play().then(() => {
       playingRef.current = true
