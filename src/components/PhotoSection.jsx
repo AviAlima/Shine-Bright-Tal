@@ -9,7 +9,7 @@ const MEMORIES = [
   { id: 3, title: 'By the Lake', file: '3-by-the-lake/photo.jpg' },
   { id: 4, title: 'With Hugo', file: '4-with-hugo/photo.jpg' },
   { id: 5, title: 'Leaving Home', file: '5-leaving-home/photo.jpg' },
-  { id: 6, title: 'Cooking', file: '6-cooking/video.mp4', video: true },
+  { id: 6, title: 'Cooking', file: '6-cooking/video.mp4', thumbnail: '6-cooking/photo.jpg', video: true },
   { id: 7, title: 'Towels', file: '7-towels/photo.jpg' },
   { id: 8, title: 'First Trip Abroad', file: '8-first-trip-abroad/photo.jpg' },
   { id: 9, title: "At Tassi's", file: '9-at-tassis/photo.jpg' },
@@ -28,22 +28,12 @@ function LockedTile({ memory, index, onReveal, revealed }) {
     >
       {revealed ? (
         // Revealed thumbnail
-        memory.video ? (
-          <video
-            src={BASE + memory.file}
-            className="absolute inset-0 w-full h-full object-cover"
-            muted
-            playsInline
-            preload="metadata"
-          />
-        ) : (
-          <img
-            src={BASE + memory.file}
-            alt={memory.title}
-            className="absolute inset-0 w-full h-full object-cover"
-            loading="lazy"
-          />
-        )
+        <img
+          src={BASE + (memory.thumbnail || memory.file)}
+          alt={memory.title}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
       ) : (
         // Locked frosted tile
         <div className="absolute inset-0 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] flex flex-col items-center justify-center gap-1.5 px-2">
@@ -99,6 +89,7 @@ function Lightbox({ memory, onClose }) {
           {memory.video ? (
             <video
               src={BASE + memory.file}
+              poster={BASE + (memory.thumbnail || memory.file)}
               className="w-full max-h-[65vh] object-contain"
               autoPlay
               loop
