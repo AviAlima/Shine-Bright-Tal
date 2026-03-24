@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 
 const MUSIC_PATH = import.meta.env.BASE_URL + 'music.mp3'
-const FADE_DELAY_MS = 5000
+const FADE_DELAY_MS = 2000
 const FADE_DURATION_MS = 2500
 const TARGET_VOLUME = 0.35
 const FADE_STEPS = 50
