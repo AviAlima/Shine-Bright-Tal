@@ -56,24 +56,25 @@ export function useBackgroundMusic() {
     }, stepInterval)
   }, [])
 
-  // Silent start — call on user interaction to secure audio permission
-  // Plays at volume 0, then fades in after delay
+  const playingRef = useRef(false)
+
+  // Secure iOS audio permission — call directly from a user gesture handler.
+  // Plays at volume 0 so the browser unlocks the AudioContext.
+  const securePermission = useCallback(() => {
+    const audio = audioRef.current
+    if (!audio || playingRef.current) return
+    audio.volume = 0
+    audio.play().then(() => {
+      playingRef.current = true
+    }).catch(() => {})
+  }, [])
+
+  // Begin the audible fade-in — safe to call from a timeout / non-gesture context
+  // because the audio element is already playing (unlocked by securePermission).
   const startMusic = useCallback(() => {
     if (started) return
-    const audio = audioRef.current
-    if (!audio) return
-
     setStarted(true)
-    audio.volume = 0
-
-    // Play immediately at volume 0 to secure iOS audio permission
-    audio.play().then(() => {
-      // Schedule fade-in after delay
-      delayRef.current = setTimeout(fadeIn, FADE_DELAY_MS)
-    }).catch(() => {
-      // Autoplay truly blocked even with interaction — reset
-      setStarted(false)
-    })
+    delayRef.current = setTimeout(fadeIn, FADE_DELAY_MS)
   }, [started, fadeIn])
 
   // Toggle mute — immediately overrides any ongoing fade
@@ -96,5 +97,5 @@ export function useBackgroundMusic() {
     })
   }, [])
 
-  return { muted, started, startMusic, toggleMute }
+  return { muted, started, securePermission, startMusic, toggleMute }
 }

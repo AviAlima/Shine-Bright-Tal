@@ -15,7 +15,7 @@ import DevPanel from './components/DevPanel'
 
 export default function App() {
   const { isBirthdayMode, forceBirthday, countdown, toggleBirthdayMode } = useDateEngine()
-  const { startMusic } = useBackgroundMusic()
+  const { securePermission, startMusic } = useBackgroundMusic()
   const [numpadOpen, setNumpadOpen] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [giftOpened, setGiftOpened] = useState(false)
@@ -61,7 +61,7 @@ export default function App() {
         )}
 
         {showEntranceGate && (
-          <EntranceGate key="entrance" onUnboxed={handleUnboxed} />
+          <EntranceGate key="entrance" onUnboxed={handleUnboxed} onInteraction={securePermission} />
         )}
 
         {showDashboard && (

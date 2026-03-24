@@ -47,7 +47,7 @@ function PressSparkles({ active, progress }) {
   )
 }
 
-export default function EntranceGate({ onUnboxed }) {
+export default function EntranceGate({ onUnboxed, onInteraction }) {
   const [pressing, setPressing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [phase, setPhase] = useState('idle') // idle | pressing | completing | flash | done
@@ -78,6 +78,9 @@ export default function EntranceGate({ onUnboxed }) {
   }, [])
 
   const startPress = useCallback(() => {
+    // Secure iOS audio permission on direct user gesture
+    if (onInteraction) onInteraction()
+
     setPressing(true)
     setPhase('pressing')
     setProgress(0)
@@ -88,7 +91,7 @@ export default function EntranceGate({ onUnboxed }) {
     timerRef.current = setTimeout(() => {
       triggerSuccess()
     }, LONG_PRESS_MS)
-  }, [animateProgress, triggerSuccess])
+  }, [animateProgress, triggerSuccess, onInteraction])
 
   const cancelPress = useCallback(() => {
     if (phase !== 'pressing') return
