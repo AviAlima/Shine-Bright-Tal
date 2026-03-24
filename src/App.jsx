@@ -15,7 +15,7 @@ import DevPanel from './components/DevPanel'
 
 export default function App() {
   const { isBirthdayMode, forceBirthday, countdown, toggleBirthdayMode } = useDateEngine()
-  const { securePermission, startMusic } = useBackgroundMusic()
+  const { startMusic } = useBackgroundMusic()
   const [numpadOpen, setNumpadOpen] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [giftOpened, setGiftOpened] = useState(false)
@@ -35,9 +35,7 @@ export default function App() {
 
   const handleUnboxed = useCallback(() => {
     setGiftOpened(true)
-    // Start background music 5s after the gift is opened (user has interacted)
-    startMusic()
-  }, [startMusic])
+  }, [])
 
   // Determine which view to show in birthday mode
   const showEntranceGate = isBirthdayMode && !giftOpened
@@ -61,7 +59,7 @@ export default function App() {
         )}
 
         {showEntranceGate && (
-          <EntranceGate key="entrance" onUnboxed={handleUnboxed} onInteraction={securePermission} />
+          <EntranceGate key="entrance" onUnboxed={handleUnboxed} />
         )}
 
         {showDashboard && (
@@ -72,6 +70,7 @@ export default function App() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
+            onPointerDown={startMusic}
           >
             <BirthdayHeader />
             <PhotoSection />
