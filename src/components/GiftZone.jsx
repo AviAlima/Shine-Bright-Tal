@@ -8,10 +8,11 @@ const vouchers = [
   { id: 'hug', emoji: '🤗', title: 'Hug', description: 'Valid forever. Redeemable with a smile.', hex: ['#fbbf24', '#f97316'] },
   { id: 'kiss', emoji: '💋', title: 'Kiss', description: 'Warning: Addictive.', hex: ['#f87171', '#e11d48'] },
   { id: 'cuddle', emoji: '☁️', title: 'Cuddling', description: 'Usage: requires blanket and minimum 15 minutes.', hex: ['#c084fc', '#ec4899'] },
+  { id: 'dessert', emoji: '🍑', title: 'Dessert First', description: 'Skip dinner.', hex: ['#fb923c', '#e11d48'] },
 ]
 
 // Stable random-ish pulse durations seeded by index
-const PULSE_DURATIONS = [2.4, 3.1, 2.7, 3.5, 2.9]
+const PULSE_DURATIONS = [2.4, 3.1, 2.7, 3.5, 2.9, 3.3]
 
 function VoucherButton({ voucher, index, onSelect }) {
   const pulseDuration = PULSE_DURATIONS[index % PULSE_DURATIONS.length]
